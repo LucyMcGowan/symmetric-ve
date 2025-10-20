@@ -262,4 +262,4 @@ ggplot(plot_data, aes(x = estimate, y = category, color = type)) +
     axis.text.y = element_text(hjust = 0, size = 9)  
   )
 
-ggsave("fig5.png", width = 5, height = 4, dpi = 300)
+ggsave("fig6.png", width = 5, height = 4, dpi = 300)

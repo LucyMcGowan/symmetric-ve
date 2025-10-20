@@ -28,12 +28,13 @@ source("figure-1.R")  # Figure 1
 source("figure-2.R")  # Figure 2
 source("figure-3.R")  # Figure 3
 source("figure-4.R")  # Figure 4
+source("figure-5.R")  # Figure 5
 ```
 
 ## Real Data Example
 
-The data from the HIV trial used in the paper can be found in the `data-example.R` file. This file also includes code to replicate Table 1 and Figure 5.
+The data from the HIV trial used in the paper can be found in the `data-example.R` file. This file also includes code to replicate Table 1 and Figure 6.
 
 ```r
-source("data-example.R") # Table 1, Figure 5
+source("data-example.R") # Table 1, Figure 6
 ```

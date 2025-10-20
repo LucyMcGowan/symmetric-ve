@@ -5,7 +5,6 @@ z_crit <- qnorm(0.975)
 
 result <- out |>
   mutate(
-
     se_hat = sqrt(sve_var(p0_hat, p1_hat, n0, n1)),
     ci_lower_wald = sve - z_crit * se_hat,
     ci_upper_wald = sve + z_crit * se_hat,
