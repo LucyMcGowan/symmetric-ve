@@ -33,7 +33,7 @@ set.seed(1)
 plot_data <- result |>
   sample_n(25) |>
   mutate(id = 1:n()) |>
-  select(id, ve_val, ci_lower_ve, ci_upper_ve, sve, ci_lower, ci_upper) %>%
+  select(id, ve_val, ci_lower_ve, ci_upper_ve, sve, ci_lower, ci_upper) |>
   pivot_longer(
     cols = c(ve_val, sve),
     names_to = "type",
