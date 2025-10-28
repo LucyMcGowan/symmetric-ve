@@ -57,6 +57,7 @@ ggplot(plot_data, aes(x = estimate, y = factor(id), color = type)) +
     y = NULL,
     color = "Estimate Type"
   ) +
+  scale_x_continuous(breaks = -6:1) +
   scale_color_manual(values = c("orange", "cornflowerblue")) +
   facet_wrap(~type) +
   theme_minimal(base_size = 12) +
