@@ -70,4 +70,4 @@ ggplot(plot_data, aes(x = estimate, y = factor(id), color = type)) +
   )
 
 
-ggsave("fig5.png", width = 5, height = 4, dpi = 300)
+ggsave("fig5.png", width = 5.5, height = 4, dpi = 300)

@@ -35,7 +35,8 @@ ggplot(ve_lines, aes(x = p0, y = p1, group = factor(effect), color = effect)) +
     x = expression("Risk in unvaccinated" ~ (p[0])),
     y = expression("Risk in vaccinated" ~ (p[1]))) +
   coord_equal() +
-  theme_minimal(base_size = 12)
+  theme_minimal(base_size = 12) + 
+  theme(panel.grid = element_blank())
 
 ggsave("fig1-a.png", width = 5, height = 4, dpi = 300)
 
@@ -48,6 +49,7 @@ ggplot(sve_lines, aes(x = p0, y = p1, group = factor(effect), color = effect)) +
     x = expression("Risk in unvaccinated" ~ (p[0])),
     y = expression("Risk in vaccinated" ~ (p[1]))) +
   coord_equal() +
-  theme_minimal(base_size = 12)
+  theme_minimal(base_size = 12) + 
+  theme(panel.grid = element_blank())
 
 ggsave("fig1-b.png", width = 5, height = 4, dpi = 300)
