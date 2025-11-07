@@ -1,4 +1,5 @@
 source("functions.R")
+library(sve)
 library(tidyverse)
 library(kableExtra)
 hiv_data <- tibble(
@@ -21,21 +22,28 @@ hiv_data <- tibble(
   placebo_total = c(1805, 1704, 101, 1495, 1468, 27, 128, 114, 14, 116, 59, 57, 21, 45, 42, 310, 236, 74, 504, 1301, 713, 1092, 609, 1107, 89)
 )
 
+hiv_data <- hiv_data |>
+  filter(vaccine_infected != 0, placebo_infected != 0) |>
+  mutate(
+    p0 = placebo_infected / placebo_total,
+    p1 = vaccine_infected / vaccine_total)
+sve_ests <- with(hiv_data, 
+                 est_sve(placebo_infected, 
+                         vaccine_infected, 
+                         placebo_total, 
+                         vaccine_total, 
+                         method = "profile")
+                 )
 results <- hiv_data |>
   filter(vaccine_infected != 0, placebo_infected != 0) |>
   mutate(
     p0 = placebo_infected / placebo_total,
     p1 = vaccine_infected / vaccine_total,
     
-    sve = sve(p0, p1),
-    z_hat = atanh(sve),
-    var_z = sve_var(p0, p1, placebo_total, vaccine_total) / (1 - sve^2)^2,
-    se_z = sqrt(var_z),
-    ci_lower_z_scale = z_hat - z_crit * se_z,
-    ci_upper_z_scale = z_hat + z_crit * se_z,
-    sve_lower = tanh(ci_lower_z_scale),
-    sve_upper = tanh(ci_upper_z_scale),
-    
+    sve = sve_ests$estimate,
+    sve_lower = sve_ests$lower,
+    sve_upper = sve_ests$upper,
+
     rr = p1 / p0,
     log_rr = log(rr),
     var_log_rr = log_rr_var(p0, p1, placebo_total, vaccine_total),
