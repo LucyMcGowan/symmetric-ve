@@ -1,49 +1,63 @@
 load("simulation_coverage.rda")
-source("functions.R")
 library(tidyverse)
+library(sve)
 z_crit <- qnorm(0.975)
+
+
+wald_results <- with(out, {
+  est_sve(x0, x1, n0, n1, method = "wald")
+})
+
+tanh_results <- with(out, {
+  est_sve(x0, x1, n0, n1, method = "tanh-wald")
+})
+
+profile_results <- with(out, {
+  est_sve(x0, x1, n0, n1, method = "profile")
+})
 
 result <- out |>
   mutate(
-    se_hat = sqrt(sve_var(p0_hat, p1_hat, n0, n1)),
-    ci_lower_wald = sve - z_crit * se_hat,
-    ci_upper_wald = sve + z_crit * se_hat,
+    sve_hat = wald_results$estimate,
+    ci_lower_wald = wald_results$lower,
+    ci_upper_wald = wald_results$upper,
+    ci_lower_tanh = tanh_results$lower,
+    ci_upper_tanh = tanh_results$upper,
+    ci_lower_profile = profile_results$lower,
+    ci_upper_profile = profile_results$upper,
     
-    z_hat = atanh(sve),
-    var_z = sve_var(p0_hat, p1_hat, n0, n1) / (1 - sve^2)^2,
-    se_z = sqrt(var_z),
-    ci_lower_z_scale = z_hat - z_crit * se_z,
-    ci_upper_z_scale = z_hat + z_crit * se_z,
-    ci_lower_fisher = tanh(ci_lower_z_scale),
-    ci_upper_fisher = tanh(ci_upper_z_scale),
+    true_sve_val = sve:::sve(p0, p1),
     
-    true_sve_val = sve(p0, p1),
     covered_wald = (true_sve_val >= ci_lower_wald) & (true_sve_val <= ci_upper_wald),
-    covered_fisher = (true_sve_val >= ci_lower_fisher) & (true_sve_val <= ci_upper_fisher)
+    covered_tanh = (true_sve_val >= ci_lower_tanh) & (true_sve_val <= ci_upper_tanh),
+    covered_profile = (true_sve_val >= ci_lower_profile) & (true_sve_val <= ci_upper_profile)
   )
 
 result_summary <- result |>
-  filter(p0_hat !=0 & p1_hat != 0) |>
   group_by(p0, p1, n0, n1) |>
   summarise(
     coverage_wald = mean(covered_wald),
-    coverage_fisher = mean(covered_fisher),
+    coverage_tanh = mean(covered_tanh),
+    coverage_profile = mean(covered_profile),
     .groups = "drop"
   )
 
+
 result_summary |>
-  mutate(sve = map2_dbl(p0, p1, sve)) |>
+  mutate(sve = map2_dbl(p0, p1, sve:::sve)) |>
   ggplot(aes(x = sve, y = coverage_wald)) +
   geom_hline(yintercept = 0.95, linetype = "dashed", color = "gray40", linewidth = 0.8) +
-  geom_line(aes(color = "Original scale Wald"), alpha = 0.7) +
-  geom_line(aes(y = coverage_fisher, color = "tanh-Wald"), alpha = 0.7) +
-  geom_point(size = 0.75, aes(color = "Original scale Wald"), alpha = 0.7) +
-  geom_point(size = 0.75, aes(y = coverage_fisher, color = "tanh-Wald"), alpha = 0.7) +
+  geom_line(aes(color = "Wald"), alpha = 0.7) +
+  geom_line(aes(y = coverage_tanh, color = "tanh-Wald"), alpha = 0.7) +
+  geom_line(aes(y = coverage_profile, color = "Profile"), alpha = 0.7) +
+  geom_point(size = 0.75, aes(color = "Wald"), alpha = 0.7) +
+  geom_point(size = 0.75, aes(y = coverage_tanh, color = "tanh-Wald"), alpha = 0.7) +
+  geom_point(size = 0.75, aes(y = coverage_profile, color = "Profile"), alpha = 0.7) +
   scale_color_manual(
     name = "Method",
-    values = c("Original scale Wald" = "cornflower blue", "tanh-Wald" = "orange")
+    values = c("Wald" = "#1E88E5", "tanh-Wald" = "#FFC107", "Profile" = "#D81B60")
   ) +
-  scale_y_continuous(breaks = c(0.93, 0.95, 0.97)) +
+  scale_y_continuous(breaks = c(0.93, 0.95, 0.97, 0.99)) +
   facet_grid(n0 ~ n1, labeller = label_both) +
   labs(
     x = "True SVE",

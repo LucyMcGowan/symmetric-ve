@@ -24,12 +24,21 @@ log_rr_var <- function(p0, p1, n0, n1) {
   return(result)
 }
 
-sve_var <- function(p0, p1, n0, n1, c = 1.96) {
+sve_var <- function(p0, p1, n0, n1, c = 1.96, epsilon = NULL) {
+
   check_proportions(p0, p1)
   sigma0 <- p0 * (1 - p0) / n0
   sigma1 <- p1 * (1 - p1) / n1
   
-  epsilon <- c * sqrt(sigma0 + sigma1)
+  if (is.null(epsilon)) {
+    epsilon <- c * sqrt(sigma0 + sigma1)
+  } else {
+    # If epsilon is a scalar, repeat it to match length of p0
+    if (length(epsilon) == 1) {
+      epsilon <- rep(epsilon, length(p0))
+    }
+  }
+  
   result <- numeric(length(p0))
   
   abs_diff <- abs(p0 - p1)
@@ -48,7 +57,6 @@ sve_var <- function(p0, p1, n0, n1, c = 1.96) {
     p1[idx_p1_gt_p0]^4
   
   # (|p0 - p1| <= epsilon)
-  
   p_avg <- (p0[idx_smooth] + p1[idx_smooth]) / 2
   result[idx_smooth] <- (sigma0[idx_smooth] + sigma1[idx_smooth]) / 
     (p_avg + epsilon[idx_smooth]/4)^2
@@ -57,13 +65,13 @@ sve_var <- function(p0, p1, n0, n1, c = 1.96) {
 }
 
 
-sve_ci <- function(p0, p1, n0, n1, level = 0.95, transform = TRUE) {
+sve_ci <- function(p0, p1, n0, n1, level = 0.95, transform = TRUE, c = 1.96, epsilon = NULL) {
   sve_val <- sve(p0, p1)
   
   if (transform) {
     z_val <- atanh(sve_val)
     
-    var_sve <- sve_var(p0, p1, n0, n1)
+    var_sve <- sve_var(p0, p1, n0, n1, c = c, epsilon = epsilon)
     var_z <- var_sve / (1 - sve_val^2)^2
     se_z <- sqrt(var_z)
     
@@ -75,7 +83,7 @@ sve_ci <- function(p0, p1, n0, n1, level = 0.95, transform = TRUE) {
     upper <- tanh(upper_z)
     
   } else {
-    var_sve <- sve_var(p0, p1, n0, n1)
+    var_sve <- sve_var(p0, p1, n0, n1, c = c, epsilon = epsilon)
     se_sve <- sqrt(var_sve)
     z_crit <- qnorm(1 - (1 - level) / 2)
     

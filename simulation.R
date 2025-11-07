@@ -2,19 +2,15 @@ source("functions.R")
 sim_infections <- function(p0, p1, n0, n1, n_iter = 10000) {
   replicate(n_iter, {
     
-    infected_unvax <- rbinom(n0, 1, p0)
-    infected_vax <- rbinom(n1, 1, p1)
-    
-    p0_hat <- mean(infected_unvax)
-    p1_hat <- mean(infected_vax)
+    x0 <- rbinom(1, n0, p0)  
+    x1 <- rbinom(1, n1, p1)  
     
     c(p0 = p0, 
       p1 = p1, 
       n0 = n0,
       n1 = n1, 
-      p0_hat = p0_hat, 
-      p1_hat = p1_hat, 
-      sve = sve(p0_hat, p1_hat))
+      x0 = x0, 
+      x1 = x1)
   }, simplify = FALSE)
 }
 
@@ -28,7 +24,6 @@ grid <- tidyr::expand_grid(
 library(furrr)
 library(future)
 plan(multisession, workers = availableCores() - 1)  
-
 
 out <- furrr::future_pmap(
   grid, 
