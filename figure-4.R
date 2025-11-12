@@ -7,11 +7,11 @@ out <- out |>
   filter(p0 == p1) 
 
 wald_results <- with(out, {
-  est_sve(x0, x1, n0, n1, method = "wald", c = 0)
+  est_sve(x0, x1, n0, n1, method = "wald")
 })
 
 tanh_results <- with(out, {
-  est_sve(x0, x1, n0, n1, method = "tanh-wald", c = 0)
+  est_sve(x0, x1, n0, n1, method = "tanh-wald")
 })
 
 profile_results <- with(out, {
