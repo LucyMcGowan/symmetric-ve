@@ -36,3 +36,28 @@ out <- furrr::future_pmap(
   dplyr::bind_rows()
 
 save(out, file = "simulation_coverage.rda")
+
+
+set.seed(1)
+
+grid_wald <- expand_grid(
+  p0 = c(0.1, 0.3, 0.5),
+  delta = c(1, 0.99, 0.95, 0.9),
+  n0 = c(100, 1000, 2500, 5000)
+)
+grid_wald$p1 <- grid_wald$p0*grid_wald$delta
+grid_wald$n1 <- grid_wald$n0
+grid_wald$delta <- NULL
+plan(multisession, workers = availableCores() - 1)  
+
+out_wald <- furrr::future_pmap(
+  grid_wald, 
+  sim_infections,
+  n_iter = 10000,
+  .options = furrr_options(seed = TRUE),
+  .progress = TRUE
+) |>
+  unlist(recursive = FALSE) |>
+  dplyr::bind_rows()
+
+save(out_wald, file = "simulation_coverage_wald.rda")
