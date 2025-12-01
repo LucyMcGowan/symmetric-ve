@@ -1,22 +1,21 @@
-load("simulation_coverage.rda")
 library(tidyverse)
 library(sve)
+
+load("simulation_coverage.rda")
+load("wald_results.rda")
+load("tanh_results.rda")
+load("profile_results.rda")
+
 z_crit <- qnorm(0.975)
 
-out <- out |>
+wald_results <- wald_results |>
   filter(p0 == p1) 
 
-wald_results <- with(out, {
-  est_sve(x0, x1, n0, n1, method = "wald")
-})
+tanh_results <- tanh_results |>
+  filter(p0 == p1) 
 
-tanh_results <- with(out, {
-  est_sve(x0, x1, n0, n1, method = "tanh-wald")
-})
-
-profile_results <- with(out, {
-  est_sve(x0, x1, n0, n1, method = "profile")
-})
+profile_results <- profile_results |>
+  filter(p0 == p1) 
 
 result <- out |>
   mutate(
@@ -71,4 +70,4 @@ result_summary |>
     strip.background = element_rect(fill = "gray95", color = NA)
   )
 
-ggsave("fig4.png", width = 5, height = 4, dpi = 300)
+ggsave("fig-s3.png", width = 5, height = 4, dpi = 300)

@@ -60,6 +60,8 @@ results <- hiv_data |>
     sve_ci_str = sprintf("%.2f (%.2f to %.2f)", sve, sve_lower, sve_upper)
   )
 
+## Table S2 ----
+
 table_data <- results |>
   select(
     category,
@@ -152,7 +154,7 @@ latex_table <- table_data_formatted |>
     col.names = c("Category", "Vaccine", "Placebo", "VE (95\\% CI)", "SVE (95\\% CI)")
   )
 
-## Figure 5 ---- 
+## Figure 4 ---- 
 
 section_headers <- tibble(
   category = c("Race", "Age", "Education level", "Baseline behavioral risk score"),
@@ -270,4 +272,4 @@ ggplot(plot_data, aes(x = estimate, y = category, color = type)) +
     axis.text.y = element_text(hjust = 0, size = 9)  
   )
 
-ggsave("fig6.png", width = 5, height = 4, dpi = 300)
+ggsave("fig4.png", width = 5, height = 4, dpi = 300)

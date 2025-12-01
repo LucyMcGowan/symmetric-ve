@@ -11,8 +11,7 @@ sve_curve <- function(SVE, p0_vals) {
   if (SVE >= 0) {
     p1 <- (1 - SVE) * p0_vals
   } else {
-    denom <- 1 + SVE
-    p1 <- p0_vals / denom
+    p1 <- p0_vals / (1 + SVE)
   }
   p1[p1 < 0] <- NA_real_
   p1[p1 > 1] <- NA_real_

@@ -1,20 +1,12 @@
-load("simulation_coverage.rda")
 library(tidyverse)
 library(sve)
+
+load("simulation_coverage.rda")
+load("wald_results.rda")
+load("tanh_results.rda")
+load("profile_results.rda")
+
 z_crit <- qnorm(0.975)
-
-
-wald_results <- with(out, {
-  est_sve(x0, x1, n0, n1, method = "wald")
-})
-
-tanh_results <- with(out, {
-  est_sve(x0, x1, n0, n1, method = "tanh-wald")
-})
-
-profile_results <- with(out, {
-  est_sve(x0, x1, n0, n1, method = "profile")
-})
 
 result <- out |>
   mutate(

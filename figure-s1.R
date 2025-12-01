@@ -1,7 +1,10 @@
-load("simulation_coverage_wald.rda")
 library(tidyverse)
 library(sve)
+
+load("simulation_coverage_wald.rda")
+
 z_crit <- qnorm(0.975)
+
 out_wald <- out_wald |>
   filter(x0 > 0, x1 > 0)
 
@@ -20,9 +23,6 @@ wald_results_noep <- with(out_wald, {
 tanh_results_noep <- with(out_wald, {
   est_sve(x0, x1, n0, n1, method = "tanh-wald", epsilon = 0)
 })
-
-
-
 
 result <- out_wald |>
   mutate(
@@ -92,6 +92,5 @@ result_summary |>
     strip.background = element_rect(fill = "gray95", color = NA),
     panel.spacing.x = unit(1.5, "lines")
   )
-
 
 ggsave("fig-s1.png", width = 9, height = 4, dpi = 300)
