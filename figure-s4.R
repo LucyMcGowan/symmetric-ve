@@ -1,11 +1,14 @@
 load("simulation_coverage.rda")
-source("functions.R")
+source("0-functions.R")
 library(tidyverse)
 
 z_crit <- qnorm(0.975)
 
 result <- out |>
   mutate(
+    p0_hat = x0 / n0,
+    p1_hat = x1 / n1,
+    sve = sve(p0_hat, p1_hat),
     z_hat = atanh(sve),
     var_z = sve_var(p0_hat, p1_hat, n0, n1) / (1 - sve^2)^2,
     se_z = sqrt(var_z),
@@ -70,4 +73,4 @@ result_summary |>
   labs(y = "Ratio: VE CI Width / SVE CI Width") +
   theme_minimal(base_size = 12) 
 
-ggsave("fig-s2.png", width = 5, height = 4, dpi = 300)
+ggsave("fig-s4.png", width = 5, height = 4, dpi = 300)
