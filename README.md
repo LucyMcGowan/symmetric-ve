@@ -32,9 +32,9 @@ Each figure can be reproduced by running the corresponding script:
 source("figure-1.R")  # Figure 1
 source("figure-2.R")  # Figure 2
 source("figure-3.R")  # Figure 3
-source("figure-s1.R")  # Figure S1
-source("figure-s2.R")  # Figure S2
+source("figure-s1-s2.R")  # Figure S1 & S2
 source("figure-s3.R")  # Figure S3
+source("figure-s4.R")  # Figure S4
 source("table-s1.R")  # Table S1
 
 ```

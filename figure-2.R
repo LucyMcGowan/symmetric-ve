@@ -18,7 +18,7 @@ result <- out |>
     ci_lower_profile = profile_results$lower,
     ci_upper_profile = profile_results$upper,
     
-    true_sve_val = sve:::sve(p0, p1),
+    true_sve_val = sve:::sve(p0, p1, n0, n1, correction = FALSE),
     
     covered_wald = (true_sve_val >= ci_lower_wald) & (true_sve_val <= ci_upper_wald),
     covered_tanh = (true_sve_val >= ci_lower_tanh) & (true_sve_val <= ci_upper_tanh),
@@ -26,7 +26,7 @@ result <- out |>
   )
 
 result_summary <- result |>
-  group_by(p0, p1, n0, n1) |>
+  group_by(p0, p1, n0, n1, true_sve_val) |>
   summarise(
     coverage_wald = mean(covered_wald),
     coverage_tanh = mean(covered_tanh),
@@ -36,8 +36,7 @@ result_summary <- result |>
 
 
 result_summary |>
-  mutate(sve = map2_dbl(p0, p1, sve:::sve)) |>
-  ggplot(aes(x = sve, y = coverage_wald)) +
+  ggplot(aes(x = true_sve_val, y = coverage_wald)) +
   geom_hline(yintercept = 0.95, linetype = "dashed", color = "gray40", linewidth = 0.8) +
   geom_line(aes(color = "Wald"), alpha = 0.7) +
   geom_line(aes(y = coverage_tanh, color = "tanh-Wald"), alpha = 0.7) +
@@ -49,7 +48,6 @@ result_summary |>
     name = "Method",
     values = c("Wald" = "#1E88E5", "tanh-Wald" = "#FFC107", "Profile" = "#D81B60")
   ) +
-  scale_y_continuous(breaks = c(0.93, 0.95, 0.97, 0.99)) +
   facet_grid(n0 ~ n1, labeller = label_both) +
   labs(
     x = "True SVE",

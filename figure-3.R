@@ -32,7 +32,7 @@ result <- out |>
     true_ve = ve(p0, p1)
   )
 
-set.seed(525)
+set.seed(326)
 plot_data <- result |>
   sample_n(25) |>
   mutate(id = 1:n()) |>

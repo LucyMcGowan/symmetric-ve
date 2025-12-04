@@ -3,17 +3,15 @@ library(sve)
 
 load("simulation_coverage.rda")
 load("wald_results.rda")
-
-wald_results_noep <- with(out, {
-  est_sve(x0, x1, n0, n1, method = "wald", smooth = FALSE)
-})
+load("wald_correct_results.rda")
 
 result <- out |>
   mutate(
     sve_hat_wald = wald_results$estimate,
     se_hat_wald = (wald_results$upper - wald_results$estimate) / qnorm(0.975),
-    se_hat_wald_noep = (wald_results_noep$upper - wald_results_noep$estimate) / qnorm(0.975),
-    sve = sve:::sve(p0, p1)
+    sve_hat_wald_correct = wald_correct_results$estimate,
+    se_hat_wald_correct = (wald_correct_results$upper - wald_correct_results$estimate) / qnorm(0.975),
+    sve = sve:::sve(p0, p1, n0, n1, correction = FALSE)
   )
 
 result_summary <- result |>
@@ -21,11 +19,13 @@ result_summary <- result |>
   group_by(p0, p1, n0, n1, sve) |>
   summarise(
     bias = mean(sve_hat_wald - sve),
+    bias_corrected = mean(sve_hat_wald_correct - sve),
     empirical_se = sd(sve_hat_wald),
+    empirical_se_correct = sd(sve_hat_wald_correct),
     estimated_se = mean(se_hat_wald),
-    estimated_senoep = mean(se_hat_wald_noep),
+    estimated_se_correct = mean(se_hat_wald_correct),
     ratio = estimated_se / empirical_se,
-    ratio_noep = estimated_senoep / empirical_se,
+    ratio_correct = estimated_se_correct / empirical_se_correct,
     .groups = "drop"
   )
 
@@ -37,7 +37,7 @@ result_summary |>
   geom_tile() +
   scale_fill_gradient2(
     low = "cornflower blue", high = "orange", mid = "white",
-    midpoint = 0, name = "Bias"
+    midpoint = 0, name = "Bias", limits = c(-0.03, 0.03)
   ) +
   facet_grid(n0 ~ n1, labeller = label_both) +
   labs(
@@ -50,16 +50,35 @@ result_summary |>
     strip.background = element_rect(fill = "gray95", color = NA)
   )
 
-ggsave("fig-s1.png", width = 6, height = 4, dpi = 300)
-
+ggsave("fig-s1-a.png", width = 6, height = 4, dpi = 300)
 
 result_summary |>
-  ggplot(aes(x = p0, y = p1, fill = estimated_se / empirical_se)) +
+  ggplot(aes(x = p0, y = p1, fill = bias_corrected)) +
+  geom_tile() +
+  scale_fill_gradient2(
+    low = "cornflower blue", high = "orange", mid = "white",
+    midpoint = 0, name = "Bias", limits = c(-0.03, 0.03)
+  ) +
+  facet_grid(n0 ~ n1, labeller = label_both) +
+  labs(
+    x = expression(p[0]),
+    y = expression(p[1])
+  ) +
+  theme_minimal(base_size = 12) + 
+  theme(
+    panel.grid.minor = element_blank(),
+    strip.background = element_rect(fill = "gray95", color = NA)
+  )
+
+ggsave("fig-s1-b.png", width = 6, height = 4, dpi = 300)
+
+result_summary |>
+  ggplot(aes(x = p0, y = p1, fill = estimated_se/empirical_se)) +
   geom_tile() +
   scale_fill_gradient2(
     low = "cornflower blue", high = "orange", mid = "white",
     midpoint = 1, name = "Estimated SE/\nEmpirical SE",
-    limits = c(0.928, 1.15)
+    limits = c(0.93, 1.07)
   ) +
   facet_grid(n0 ~ n1, labeller = label_both) +
   labs(
@@ -72,25 +91,4 @@ result_summary |>
     strip.background = element_rect(fill = "gray95", color = NA)
   )
 
-ggsave("fig-s2-a.png", width = 7, height = 4, dpi = 300)
-
-result_summary |>
-  ggplot(aes(x = p0, y = p1, fill = estimated_senoep / empirical_se)) +
-  geom_tile() +
-  scale_fill_gradient2(
-    low = "cornflower blue", high = "orange", mid = "white",
-    midpoint = 1, name = "Estimated SE/\nEmpirical SE",
-    limits = c(0.928, 1.15)
-  ) +
-  facet_grid(n0 ~ n1, labeller = label_both) +
-  labs(
-    x = expression(p[0]),
-    y = expression(p[1])
-  ) +
-  theme_minimal(base_size = 12) + 
-  theme(
-    panel.grid.minor = element_blank(),
-    strip.background = element_rect(fill = "gray95", color = NA)
-  )
-
-ggsave("fig-s2-b.png", width = 7, height = 4, dpi = 300)
+ggsave("fig-s2.png", width = 7, height = 4, dpi = 300)

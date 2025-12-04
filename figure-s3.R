@@ -1,96 +1,76 @@
+load("simulation_coverage.rda")
+source("0-functions.R")
 library(tidyverse)
-library(sve)
-
-load("simulation_coverage_wald.rda")
 
 z_crit <- qnorm(0.975)
 
-out_wald <- out_wald |>
-  filter(x0 > 0, x1 > 0)
-
-wald_results <- with(out_wald, {
-  est_sve(x0, x1, n0, n1, method = "wald")
-})
-
-tanh_results <- with(out_wald, {
-  est_sve(x0, x1, n0, n1, method = "tanh-wald")
-})
-
-wald_results_noep <- with(out_wald, {
-  est_sve(x0, x1, n0, n1, method = "wald", smooth = FALSE)
-})
-
-tanh_results_noep <- with(out_wald, {
-  est_sve(x0, x1, n0, n1, method = "tanh-wald", smooth = FALSE)
-})
-
-result <- out_wald |>
+result <- out |>
   mutate(
-    sve_hat = wald_results$estimate,
-    ci_lower_wald = wald_results$lower,
-    ci_upper_wald = wald_results$upper,
-    ci_lower_tanh = tanh_results$lower,
-    ci_upper_tanh = tanh_results$upper,
-    ci_lower_wald_noep = wald_results_noep$lower,
-    ci_upper_wald_noep = wald_results_noep$upper,
-    ci_lower_tanh_noep = tanh_results_noep$lower,
-    ci_upper_tanh_noep = tanh_results_noep$upper,
+    p0_hat = x0 / n0,
+    p1_hat = x1 / n1,
+    sve = sve(p0_hat, p1_hat),
+    z_hat = atanh(sve),
+    var_z = sve_var(p0_hat, p1_hat, n0, n1) / (1 - sve^2)^2,
+    se_z = sqrt(var_z),
+    ci_lower_z_scale = z_hat - z_crit * se_z,
+    ci_upper_z_scale = z_hat + z_crit * se_z,
+    ci_lower = tanh(ci_lower_z_scale),
+    ci_upper = tanh(ci_upper_z_scale),
+    width_sve = ci_upper - ci_lower,
     
-    true_sve_val = sve:::sve(p0, p1),
+    ve_val = ve(p0_hat, p1_hat),
+    rr_val = p1_hat / p0_hat,
+    log_rr = log(rr_val),
+    var_log_rr = log_rr_var(p0_hat, p1_hat, n0, n1),
+    se_log_rr = sqrt(var_log_rr),
+    ci_lower_log_rr = log_rr - z_crit * se_log_rr,
+    ci_upper_log_rr = log_rr + z_crit * se_log_rr,
+    ci_lower_ve = 1 - exp(ci_upper_log_rr),  
+    ci_upper_ve = 1 - exp(ci_lower_log_rr), 
+    width_ve = ci_upper_ve - ci_lower_ve,
     
-    covered_wald = (true_sve_val >= ci_lower_wald) & (true_sve_val <= ci_upper_wald),
-    covered_tanh = (true_sve_val >= ci_lower_tanh) & (true_sve_val <= ci_upper_tanh),
-    covered_wald_noep = (true_sve_val >= ci_lower_wald_noep) & (true_sve_val <= ci_upper_wald_noep),
-    covered_tanh_noep = (true_sve_val >= ci_lower_tanh_noep) & (true_sve_val <= ci_upper_tanh_noep)
-  ) |>
-  mutate(sve = sve:::sve(p0, p1))
+    true_sve = sve(p0, p1),
+    true_ve = ve(p0, p1)
+  )
 
 result_summary <- result |>
-  group_by(p0, p1, sve, n0, n1) |>
+  filter(n0 == 1000, n1 == 1000) |>
+  group_by(p0, p1, n0, n1) |>
   summarise(
-    coverage_wald = mean(covered_wald),
-    coverage_tanh = mean(covered_tanh),
-    coverage_wald_noep = mean(covered_wald_noep),
-    coverage_tanh_noep = mean(covered_tanh_noep),
+    true_sve = first(true_sve),
+    true_ve = first(true_ve),
+    mean_width_sve = mean(width_sve),
+    mean_width_ve = mean(width_ve),
+    median_width_sve = median(width_sve),
+    median_width_ve = median(width_ve),
+    width_ratio = mean_width_ve / mean_width_sve,
     .groups = "drop"
-  ) |>
-  mutate(
-    sve = round(sve, 2),
-    p_diff_label = factor(paste0("SVE = ", sve), 
-                          levels = paste0("SVE = ", sort(unique(sve))))
   )
-
 
 result_summary |>
-  ggplot(aes(x = n0, y = coverage_tanh)) +
-  geom_hline(yintercept = 0.95, linetype = "dashed", color = "gray40", linewidth = 0.8) +
-  geom_line(aes(color = "tanh-Wald (with smoothing)")) +
-  geom_line(aes(y = coverage_tanh_noep, color = "tanh-Wald")) +
-  
-  geom_point(size = 0.75, aes(y = coverage_tanh, color = "tanh-Wald (with smoothing)")) +
-  geom_point(size = 0.75, aes(y = coverage_tanh_noep, color = "tanh-Wald")) +
-  
-  scale_color_manual(
-    name = "Method",
-    values = c("tanh-Wald" = "cornflower blue", 
-               "tanh-Wald (with smoothing)" = "orange")
-  ) +
-  scale_x_continuous(breaks = c(100, 1000, 2500, 5000)) +
-  facet_grid(p0 ~ p_diff_label, 
-             labeller = label_bquote(
-               rows = p[0] == .(p0),
-               cols = .(p_diff_label)
-             )) +
-  labs(
-    x = expression(n[0]==n[1]),
-    y = "Coverage Probability"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    legend.position = "bottom",
-    panel.grid.minor = element_blank(),
-    strip.background = element_rect(fill = "gray95", color = NA),
-    panel.spacing.x = unit(1.5, "lines")
-  )
+  ggplot(aes(x = true_sve, y = width_ratio)) +
+  annotate("rect", 
+           xmin = 0, 
+           xmax = max(result_summary$true_sve), 
+           ymin = 0, ymax = Inf,
+           fill = "lightblue", alpha = 0.15) +
+  annotate("text", 
+           x = 0.45, 
+           y = 50, 
+           label = "SVE = VE") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray40", linewidth = 0.8) +
+  geom_line(color = "cornflower blue", linewidth = 1.4) +
+  geom_point(color = "cornflower blue") +
+  scale_x_continuous(
+    name = "Symmetric VE (SVE)",
+    breaks = seq(-0.9, 0.9, by = 0.2),
+    sec.axis = sec_axis(
+      transform = ~.,
+      name = "Traditional VE",
+      breaks = seq(-0.9, 0.9, by = 0.2),
+      labels = c(round((seq(-0.9, -0.1, by = 0.2) / (seq(-0.9, -0.1, by = 0.2) + 1)), 1), seq(0.1, 0.9, by = 0.2))
+    )) +
+  labs(y = "Ratio: VE CI Width / SVE CI Width") +
+  theme_minimal(base_size = 12) 
 
-ggsave("fig-s3.png", width = 9, height = 4, dpi = 300)
+ggsave("fig-s3.png", width = 5, height = 4, dpi = 300)
