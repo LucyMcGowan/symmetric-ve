@@ -11,17 +11,11 @@ z_crit <- qnorm(0.975)
 result <- out |>
   mutate(
     sve_hat = wald_results$estimate,
-    sve_hat_correct = wald_correct_results$estimate,
     ci_lower_wald = wald_results$lower,
     ci_upper_wald = wald_results$upper,
-    ci_lower_wald_correct = wald_correct_results$lower,
-    ci_upper_wald_correct = wald_correct_results$upper,
     
     ci_lower_tanh = tanh_results$lower,
     ci_upper_tanh = tanh_results$upper,
-    
-    ci_lower_tanh_correct = tanh_correct_results$lower,
-    ci_upper_tanh_correct = tanh_correct_results$upper,
     
     ci_lower_profile = profile_results$lower,
     ci_upper_profile = profile_results$upper,
@@ -30,8 +24,6 @@ result <- out |>
     
     covered_wald = (true_sve_val >= ci_lower_wald) & (true_sve_val <= ci_upper_wald),
     covered_tanh = (true_sve_val >= ci_lower_tanh) & (true_sve_val <= ci_upper_tanh),
-    covered_wald_correct = (true_sve_val >= ci_lower_wald_correct) & (true_sve_val <= ci_upper_wald_correct),
-    covered_tanh_correct = (true_sve_val >= ci_lower_tanh_correct) & (true_sve_val <= ci_upper_tanh_correct),
     covered_profile = (true_sve_val >= ci_lower_profile) & (true_sve_val <= ci_upper_profile)
   ) |>
   filter(p0 == p1)
@@ -39,11 +31,9 @@ result <- out |>
 result_summary <- result |>
   group_by(p0, p1, n0, n1) |>
   summarise(
-    t1error_wald = 1 - mean(covered_wald),
-    t1error_tanh = 1 - mean(covered_tanh),
-    t1error_wald_correct = 1 - mean(covered_wald_correct),
-    t1error_tanh_correct = 1 - mean(covered_tanh_correct),
-    t1error_profile = 1 - mean(covered_profile),
+    t1error_wald = 1 - mean(covered_wald, na.rm = TRUE),
+    t1error_tanh = 1 - mean(covered_tanh, na.rm = TRUE),
+    t1error_profile = 1 - mean(covered_profile, na.rm = TRUE),
     .groups = "drop"
   )
 
