@@ -50,7 +50,7 @@ result_summary |>
     name = "Method",
     values = c("Wald" = "#1E88E5", "tanh-Wald" = "#FFC107", "Profile" = "#D81B60")
   ) +
-  scale_y_continuous(limits = c(0, 0.151)) +
+  scale_y_continuous(limits = c(0, 0.152)) +
   scale_x_continuous(breaks = c(0.1, 0.3, 0.5, 0.7, 0.9)) +
   facet_grid(n0 ~ n1, labeller = label_both) +
   labs(
